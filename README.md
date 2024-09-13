@@ -1,36 +1,174 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1) Set up a new Next.js project:
+```
+npx create-next-app@latest next-auth-v5 --typescript --tailwind --eslint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+choose the following options:
+- Yes to `src/` directory
+- Yes to App Router
+- No to customize import alias
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2) Install prisma, next-auth and necessary dependencies:
+```bash
+cd next-auth-v5
+npm i prisma @types/bcrypt --save-dev 
+npm i @prisma/client @auth/prisma-adapter next-auth@beta sqlite bcrypt
+npx auth secret
+npx prisma init --datasource-provider sqlite
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3) [Create a new `prisma/db.ts` file](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices)
+```ts
+import { PrismaClient } from '@prisma/client'
 
-## Learn More
+const prismaClientSingleton = () => {
+  return new PrismaClient()
+}
 
-To learn more about Next.js, take a look at the following resources:
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+} & typeof global;
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+export default prisma
 
-## Deploy on Vercel
+if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4) [Edit schema file at `prisma/schema.prisma` with the following models:](https://authjs.dev/getting-started/adapters/prisma)
+```
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+```
+
+
+5) Run the following command to create the SQLite database:
+```bash
+npx prisma migrate dev --name init
+```
+
+6) Set up `auth.ts` at root of app
+```
+import NextAuth from "next-auth"
+import Google from "next-auth/providers/google"
+import Pri
+ 
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [Google],
+})
+```
+
+7) Add `handlers` at `api/auth/[...nextauth]/route.ts` so that Auth.js can run on any incoming request
+```
+import { handlers } from "@/auth"
+export const { GET, POST } = handlers
+```
+
+8) Setup user schema at `auth/actions.ts`
+```ts
+import z from "zod";
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .email({
+      message: "Email is required",
+    })
+    .transform((val) => `${val}@mysa.gov.my`),
+  password: z.string().min(8, {
+    message: "Password is required",
+  }),
+});
+
+export const registerSchema = z.object({
+  email: z.string().email({
+    message: "Email is required",
+  }),
+  password: z.string().min(8, {
+    message: "Password is required",
+  }),
+});
+``` 
+9) Install (shadcn)[https://ui.shadcn.com/docs/installation/next] and its components
+```bash
+npx shadcn@latest init
+npx shadcn@latest add input card form
+```
+
+10) Set up Sign In page at `auth/signin/page.tsx`
+```tsx
+
+
+
+11) Set up Sign Up page at `auth/signup/page.tsx`
+```tsx
+
+```
