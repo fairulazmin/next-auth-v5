@@ -133,17 +133,25 @@ import { handlers } from "@/auth"
 export const { GET, POST } = handlers
 ```
 
-7) Add (Google)[https://authjs.dev/getting-started/providers/google] Provider
+7) Add [Google](https://authjs.dev/getting-started/providers/google) Provider
 - Create new project
-- Configure (Google OAuth consent screen)[https://console.cloud.google.com/apis/consent]
+- Configure [Google OAuth consent screen](https://console.cloud.google.com/apis/consent)
+
   ✅ User Type: External
+
   ✅ Give App name
+  
   ✅ Enter user support email
+  
   ✅ Enter developer contact information
+  
   ✅ Under ADD OR REMOVE SCOPES: checked userinfo.email & userinfo.profile
-- Configure (Google Credentials)[https://console.cloud.google.com/apis/credentials]
+- Configure [Google Credentials](https://console.cloud.google.com/apis/credentials)
+  
   ✅ Click CREATE CREDENTIALS and select OAuth client ID
+  
   ✅ Select `Web application` for Application type
+  
   ✅ Insert `https://localhost:3000/api/auth/callback/google` for Authorized redirect URIs
 - Add environment variables in `.env.local` file
   ```
@@ -209,7 +217,7 @@ export const authConfig = {
 } satisfies NextAuthConfig;
 ```
 
-9) Set up `Auth` at`app/auth.ts`
+9) Set up `Auth` at `app/auth.ts`
 ```ts
 import NextAuth from "next-auth";
 
@@ -365,7 +373,7 @@ export const loginUser = async (values: SignInValues) => {
 };
 ``` 
 
-13) Install (shadcn)[https://ui.shadcn.com/docs/installation/next] and its components
+13) Install [shadcn](https://ui.shadcn.com/docs/installation/next) and its components
 ```bash
 npx shadcn@latest init
 npx shadcn@latest add input card form toast dropdown-menu checkbox sheet avatar
@@ -745,7 +753,7 @@ const SignUpPage = () => {
         description: login.success,
         duration: 2000,
       });
-      redirect("/");
+      redirect("/auth/signin");
     });
   };
 
