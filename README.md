@@ -1,11 +1,11 @@
 <p align="center">
   <h3 align="center">Next Auth v5</h3>
-  <p align="center" style="align: center;">
-  <a href="https://authjs.dev/getting-started"><img src="https://authjs.dev/img/logo-sm.png" alt="AuthJs"/></a>
-  <a href=""><img src="https://lucide.dev/library-logos/shadcn-ui-dark.svg"/></a>
-  <a href="https://authjs.dev/getting-started/adapters/prisma"><img src="https://logowik.com/content/uploads/images/prisma2244.jpg"/></a>
-  <img src="https://cdn.worldvectorlogo.com/logos/sqlite.svg" alt="SQLite"/>
-  <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=flat-square" alt="TypeScript" />
+    <p align="center" style="align: center;">
+    <a href="https://authjs.dev/getting-started"><img src="https://authjs.dev/img/logo-sm.png" alt="AuthJs" height=20 width="auto"/></a>
+    <a href=""><img src="https://lucide.dev/library-logos/shadcn-ui-dark.svg" height=20 width="auto"/></a>
+    <a href="https://authjs.dev/getting-started/adapters/prisma"><img src="https://cdn.worldvectorlogo.com/logos/prisma-2.svg" height=20 width="auto"/></a>
+    <img src="https://cdn.worldvectorlogo.com/logos/sqlite.svg" alt="SQLite" height=20 width="auto"/>
+    <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=flat-square" alt="TypeScript" />
   </p>
 </p>
 
