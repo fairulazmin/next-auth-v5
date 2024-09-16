@@ -1,6 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,18 +25,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Icons } from "@/components/ui/icons";
-
-import { signUpSchema } from "@/app/auth/type";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema, SignUpValues } from "@/app/auth/auth-type";
 import { company } from "@/lib/def";
-import { signIn } from "../../../../auth";
-
-type SignUpValues = z.infer<typeof signUpSchema>;
+import { createUser } from "../auth-actions";
+import { GoogleSignIn } from "@/components/custom/google-signin-button";
 
 const SignUpPage = () => {
+  const [isLoading, startTransition] = useTransition();
+
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -38,8 +41,24 @@ const SignUpPage = () => {
     },
   });
 
-  const onSubmit = (values: SignUpValues) => {
-    console.log(values);
+  const onSubmit = async (values: SignUpValues) => {
+    startTransition(async () => {
+      const login = await createUser(values);
+      if (login.error) {
+        toast({
+          title: "Toast",
+          description: login.error,
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+      toast({
+        title: "Toast",
+        description: login.success,
+        duration: 2000,
+      });
+      redirect("/");
+    });
   };
 
   return (
@@ -63,11 +82,16 @@ const SignUpPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
-                        <div className="flex items-center">
+                        <div className="relative">
                           <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input
+                              className="pr-32"
+                              placeholder="username"
+                              disabled={isLoading}
+                              {...field}
+                            />
                           </FormControl>
-                          <span className="ml-2 text-muted-foreground">
+                          <span className="absolute right-1 top-2 mr-2 text-muted-foreground">
                             @{company.email_domain}
                           </span>
                         </div>
@@ -75,8 +99,28 @@ const SignUpPage = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            disabled={isLoading}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" disabled={isLoading} className="w-full">
                     Register
+                    {isLoading && (
+                      <Loader2 className="ml-2 w-4 h-4 animate-spin" />
+                    )}
                   </Button>
                 </form>
               </Form>
@@ -91,18 +135,7 @@ const SignUpPage = () => {
                 </span>
               </div>
             </div>
-            <form
-              action={async () => {
-                "use server";
-
-                await signIn("google");
-              }}
-            >
-              <Button type="submit" variant="outline" className="w-full">
-                <Icons.google className="h-4 w-4 mr-2" />
-                Google
-              </Button>
-            </form>
+            <GoogleSignIn />
           </div>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}

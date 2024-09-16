@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,18 +18,19 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 
-import { signInSchema } from "@/app/auth/type";
-import { z } from "zod";
+import { signInSchema, SignInValues } from "@/app/auth/auth-type";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { company } from "@/lib/def";
-
-type SignInValues = z.infer<typeof signInSchema>;
+import { GoogleSignIn } from "@/components/custom/google-signin-button";
+import { loginUser } from "../auth-actions";
+import { useTransition } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const SignInPage = () => {
+  const [isLoading, startTransition] = useTransition();
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -38,7 +40,16 @@ const SignInPage = () => {
   });
 
   const onSubmit = (values: SignInValues) => {
-    console.log(values);
+    startTransition(async () => {
+      const login = await loginUser(values);
+      login?.error &&
+        toast({
+          title: "Toast",
+          description: login.error,
+          variant: "destructive",
+          duration: 2000,
+        });
+    });
   };
 
   return (
@@ -64,11 +75,16 @@ const SignInPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
-                        <div className="flex items-center">
+                        <div className="relative">
                           <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input
+                              className="pr-32"
+                              placeholder="username"
+                              disabled={isLoading}
+                              {...field}
+                            />
                           </FormControl>
-                          <span className="ml-2 text-muted-foreground">
+                          <span className="absolute right-1 top-2 mr-2 text-muted-foreground">
                             @{company.email_domain}
                           </span>
                         </div>
@@ -76,8 +92,28 @@ const SignInPage = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            disabled={isLoading}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     Login
+                    {isLoading && (
+                      <Loader2 className="ml-2 w-4 h-4 animate-spin" />
+                    )}
                   </Button>
                 </form>
               </Form>
@@ -92,9 +128,7 @@ const SignInPage = () => {
                 </span>
               </div>
             </div>
-            <Button variant="outline" className="w-full">
-              <Icons.google className="h-4 w-4 mr-2" /> Google
-            </Button>
+            <GoogleSignIn />
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
